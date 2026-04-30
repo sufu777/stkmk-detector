@@ -27,6 +27,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow factoryClass="cc.sufuzz.stkmkdetector.ui.UnClosedStaticMockScanResultWindow"
                     id="unClosedStaticMockScanResult" anchor="bottom" icon="AllIcons.Actions.Annotate"/>
+        <notificationGroup displayType="BALLOON" id="stkmk-detector"/>
     </extensions>
     <actions>
         <action id="UnClosedStaticMockScan" class="cc.sufuzz.stkmkdetector.UnclosedMockScanAction"

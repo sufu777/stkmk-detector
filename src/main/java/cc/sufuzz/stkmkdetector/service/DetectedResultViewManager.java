@@ -16,12 +16,12 @@ import javax.swing.table.DefaultTableModel;
 import java.util.List;
 
 @Service(Service.Level.PROJECT)
-public final class StaticMockViewManager {
+public final class DetectedResultViewManager {
     private final Project project;
     private JBTable resultTable;
     private DefaultTableModel tableModel;
 
-    public StaticMockViewManager(Project project) {
+    public DetectedResultViewManager(Project project) {
         this.project = project;
     }
 

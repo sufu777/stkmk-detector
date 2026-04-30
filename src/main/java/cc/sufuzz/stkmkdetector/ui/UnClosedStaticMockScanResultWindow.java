@@ -1,6 +1,6 @@
 package cc.sufuzz.stkmkdetector.ui;
 
-import cc.sufuzz.stkmkdetector.service.StaticMockViewManager;
+import cc.sufuzz.stkmkdetector.service.DetectedResultViewManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
@@ -30,7 +30,7 @@ public class UnClosedStaticMockScanResultWindow implements ToolWindowFactory {
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(new JScrollPane(issueTable), BorderLayout.CENTER);
 
-        StaticMockViewManager manager = project.getService(StaticMockViewManager.class);
+        DetectedResultViewManager manager = project.getService(DetectedResultViewManager.class);
         manager.setTable(issueTable, defaultTableModel);
 
         Content resultContent = ContentFactory.getInstance().createContent(panel, "扫描结果", false);

@@ -1,8 +1,13 @@
 package cc.sufuzz.stkmkdetector.task;
 
 import cc.sufuzz.stkmkdetector.StaticMockCloseVisitor;
-import cc.sufuzz.stkmkdetector.service.StaticMockViewManager;
+import cc.sufuzz.stkmkdetector.cfg.ConfigurationLoadException;
+import cc.sufuzz.stkmkdetector.cfg.DetectorConfig;
+import cc.sufuzz.stkmkdetector.cfg.DetectorConfigLoader;
+import cc.sufuzz.stkmkdetector.service.DetectedResultViewManager;
 import com.intellij.ide.highlighter.JavaFileType;
+import com.intellij.notification.NotificationGroupManager;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -32,10 +37,17 @@ public class ScannerTask extends Task.Backgroundable {
 
     @Override
     public void run(@NotNull ProgressIndicator progressIndicator) {
-        // 遍历文件期间不能中断任务
         if (Objects.isNull(project)) {
             return;
         }
+        try {
+            DetectorConfig detectorConfig = DetectorConfigLoader.loadConfig();
+        } catch (ConfigurationLoadException e) {
+            NotificationGroupManager.getInstance().getNotificationGroup("stkmk-detector")
+                    .createNotification("配置文件加载失败", e.getMessage(), NotificationType.ERROR);
+            return;
+        }
+        // 遍历文件期间不能中断任务
         progressIndicator.setIndeterminate(false);
         Collection<VirtualFile> testFiles = ReadAction.compute(() -> FileTypeIndex.getFiles(JavaFileType.INSTANCE, GlobalSearchScopes.projectTestScope(project)));
         List<JavaFileIssue> issues = testFiles.stream()
@@ -53,7 +65,7 @@ public class ScannerTask extends Task.Backgroundable {
         ApplicationManager.getApplication().invokeLater(() -> {
             tw.show();
         });
-        StaticMockViewManager service = project.getService(StaticMockViewManager.class);
+        DetectedResultViewManager service = project.getService(DetectedResultViewManager.class);
         service.updateIssues(issues);
     }
 
