@@ -4,13 +4,15 @@
       "id": 1,
       "name": "ClassPropertiesClose",
       "desc": "类级别的 staticMock 如果在 @BeforeAll 中初始化了staticMock，那么就应该在 @AfterAll 中关闭",
-      "detector": "classPropertiesAllCleanUpCloseDetector"
+      "detector": "classPropertiesAllCleanUpCloseDetector",
+      "enable": true
     },
     {
       "id": 2,
       "name": "ClassPropertiesClose",
       "desc": "类级别的 staticMock 如果在 @BeforeEach 中初始化了staticMock，那么就应该在 @AfterEach 中关闭",
-      "detector": "classPropertiesEachCleanUpCloseDetector"
+      "detector": "classPropertiesEachCleanUpCloseDetector",
+      "enable": true
     }
   ]
 }

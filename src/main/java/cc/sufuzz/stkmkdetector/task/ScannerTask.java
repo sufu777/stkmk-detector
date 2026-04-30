@@ -1,11 +1,13 @@
 package cc.sufuzz.stkmkdetector.task;
 
 import cc.sufuzz.stkmkdetector.StaticMockCloseVisitor;
+import cc.sufuzz.stkmkdetector.UnClosedStaticMockIssue;
 import cc.sufuzz.stkmkdetector.cfg.ConfigurationLoadException;
 import cc.sufuzz.stkmkdetector.cfg.DetectorConfig;
 import cc.sufuzz.stkmkdetector.cfg.DetectorConfigLoader;
+import cc.sufuzz.stkmkdetector.i18n.I18nBundle;
 import cc.sufuzz.stkmkdetector.service.DetectedResultViewManager;
-import com.intellij.ide.highlighter.JavaFileType;
+import cc.sufuzz.stkmkdetector.service.DetectorService;
 import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
@@ -18,12 +20,9 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiManager;
-import com.intellij.psi.search.FileTypeIndex;
-import com.intellij.psi.search.GlobalSearchScopes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,7 +30,7 @@ public class ScannerTask extends Task.Backgroundable {
     private final Project project;
 
     public ScannerTask(@Nullable Project project) {
-        super(project, "扫描未关闭的StaticMock", true);
+        super(project, I18nBundle.message("plugin.task.title"), true);
         this.project = project;
     }
 
@@ -40,21 +39,25 @@ public class ScannerTask extends Task.Backgroundable {
         if (Objects.isNull(project)) {
             return;
         }
+        DetectorService detectorService = project.getService(DetectorService.class);
+        DetectorConfig detectorConfig;
         try {
-            DetectorConfig detectorConfig = DetectorConfigLoader.loadConfig();
+            detectorConfig = DetectorConfigLoader.loadConfig();
+            detectorConfig.validRules(detectorService);
         } catch (ConfigurationLoadException e) {
             NotificationGroupManager.getInstance().getNotificationGroup("stkmk-detector")
-                    .createNotification("配置文件加载失败", e.getMessage(), NotificationType.ERROR);
+                    .createNotification(I18nBundle.message("plugin.config.load.err.text"), e.getMessage(), NotificationType.ERROR);
             return;
         }
-        // 遍历文件期间不能中断任务
-        progressIndicator.setIndeterminate(false);
-        Collection<VirtualFile> testFiles = ReadAction.compute(() -> FileTypeIndex.getFiles(JavaFileType.INSTANCE, GlobalSearchScopes.projectTestScope(project)));
-        List<JavaFileIssue> issues = testFiles.stream()
-                .map(f -> this.analyzeFile(f, progressIndicator))
-                .filter(Objects::nonNull)
-                .toList();
-        showIssues(issues);
+        List<UnClosedStaticMockIssue> unClosedStaticMockIssues = detectorService.doDetect(project, progressIndicator, detectorConfig);
+
+
+//        Collection<VirtualFile> testFiles = ReadAction.compute(() -> FileTypeIndex.getFiles(JavaFileType.INSTANCE, GlobalSearchScopes.projectTestScope(project)));
+//        List<JavaFileIssue> issues = testFiles.stream()
+//                .map(f -> this.analyzeFile(f, progressIndicator))
+//                .filter(Objects::nonNull)
+//                .toList();
+//        showIssues(issues);
     }
 
     private void showIssues(List<JavaFileIssue> issues) {

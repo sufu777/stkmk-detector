@@ -5,7 +5,7 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
-    <name>Stkmk-detector</name>
+    <name>Stkmk-Detector</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor url="https://cc.sufuzz">comp</vendor>
@@ -27,8 +27,11 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow factoryClass="cc.sufuzz.stkmkdetector.ui.UnClosedStaticMockScanResultWindow"
                     id="unClosedStaticMockScanResult" anchor="bottom" icon="AllIcons.Actions.Annotate"/>
-        <notificationGroup displayType="BALLOON" id="stkmk-detector"/>
+        <notificationGroup displayType="BALLOON" id="stkmk-detector" bundle="message.i18n"
+                           key="notification.group.stkmk-detector"/>
     </extensions>
+
+    <resource-bundle>message.i18n</resource-bundle>
     <actions>
         <action id="UnClosedStaticMockScan" class="cc.sufuzz.stkmkdetector.UnclosedMockScanAction"
                 text="ScanUnclosedMockStatic" description="Scan unclosed staticMock">
