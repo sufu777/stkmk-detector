@@ -5,17 +5,16 @@ import cc.sufuzz.stkmkdetector.detectors.UnCloseDetector;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 
-import java.util.Collections;
 import java.util.List;
 
-public class ClassPropertiesEachCleanUpCloseDetector extends BaseDetector implements UnCloseDetector {
+public class TestMethodCloseDetector extends BaseDetector implements UnCloseDetector {
     @Override
     public String name() {
-        return "classPropertiesEachCleanUpCloseDetector";
+        return "testMethodCloseDetector";
     }
 
     @Override
     public List<UnClosedStaticMockIssue> doDetect(Project project, ProgressIndicator progressIndicator) {
-        return Collections.emptyList();
+        return List.of();
     }
 }
