@@ -2,16 +2,16 @@
   "rules": [
     {
       "id": 1,
-      "name": "ClassPropertiesClose",
-      "desc": "类级别的 staticMock 如果在 @BeforeAll 中初始化了staticMock，那么就应该在 @AfterAll 中关闭",
-      "detector": "classPropertiesAllCleanUpCloseDetector",
+      "name": "ClassProperties",
+      "desc": "类级别的 staticMock 如果在 @BeforeAll/@BeforeEach 中初始化了staticMock，那么就应该在 @AfterAll/@AfterEach 中关闭",
+      "detector": "classPropertiesCleanUpCloseDetector",
       "enable": true
     },
     {
       "id": 2,
-      "name": "ClassPropertiesClose",
-      "desc": "类级别的 staticMock 如果在 @BeforeEach 中初始化了staticMock，那么就应该在 @AfterEach 中关闭",
-      "detector": "classPropertiesEachCleanUpCloseDetector",
+      "name": "LocalVariable",
+      "desc": "测试方法中的本地变量应该在测试方法本身中关闭",
+      "detector": "testMethodCloseDetector",
       "enable": true
     }
   ]

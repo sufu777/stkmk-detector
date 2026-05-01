@@ -1,15 +1,17 @@
 package cc.sufuzz.stkmkdetector.service;
 
-import cc.sufuzz.stkmkdetector.UnClosedStaticMockIssue;
 import cc.sufuzz.stkmkdetector.cfg.DetectorConfig;
 import cc.sufuzz.stkmkdetector.cfg.DetectorRule;
+import cc.sufuzz.stkmkdetector.detectors.DetectResult;
 import cc.sufuzz.stkmkdetector.detectors.UnCloseDetector;
-import cc.sufuzz.stkmkdetector.detectors.impl.ClassPropertiesAllCleanUpCloseDetector;
-import cc.sufuzz.stkmkdetector.detectors.impl.ClassPropertiesEachCleanUpCloseDetector;
+import cc.sufuzz.stkmkdetector.detectors.UnClosedStaticMockIssue;
+import cc.sufuzz.stkmkdetector.detectors.impl.ClassPropertiesCleanUpCloseDetector;
+import cc.sufuzz.stkmkdetector.detectors.impl.TestMethodCloseDetector;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -23,8 +25,8 @@ public final class DetectorService {
     private final Map<String, UnCloseDetector> DETECTOR_MAP = new HashMap<>();
 
     public DetectorService() {
-        this.initDetector(new ClassPropertiesAllCleanUpCloseDetector());
-        this.initDetector(new ClassPropertiesEachCleanUpCloseDetector());
+        this.initDetector(new ClassPropertiesCleanUpCloseDetector());
+        this.initDetector(new TestMethodCloseDetector());
     }
 
     /**
@@ -49,12 +51,16 @@ public final class DetectorService {
      * @param detectorConfig    配置
      * @return 扫描到的未关闭的 staticMock
      */
-    public List<UnClosedStaticMockIssue> doDetect(Project project, ProgressIndicator progressIndicator, DetectorConfig detectorConfig) {
-        return detectorConfig.rules()
+    public DetectResult doDetect(Project project, ProgressIndicator progressIndicator, DetectorConfig detectorConfig) {
+        DetectResult detectResult = new DetectResult();
+        List<UnClosedStaticMockIssue> list = detectorConfig.rules()
                 .stream()
                 .filter(DetectorRule::enable)
                 .flatMap(r -> this.doDetectWithRule(project, progressIndicator, r).stream())
                 .toList();
+        detectResult.setIssues(list);
+        detectResult.setEndTime(LocalDateTime.now());
+        return detectResult;
     }
 
     /**
