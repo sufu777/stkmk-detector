@@ -11,7 +11,7 @@ import java.util.Objects;
 
 public class PsiSearchTool {
     public static final String METHOD_CLOSE = "close";
-    public static final String METHOD_CLOSE_ON_DAEMON = "closeOnDaemon";
+    public static final String METHOD_CLOSE_ON_DAEMON = "closeOnDemand";
 
     /**
      * 检查 element 所在方法中，是否定义了名叫 variableName 的变量

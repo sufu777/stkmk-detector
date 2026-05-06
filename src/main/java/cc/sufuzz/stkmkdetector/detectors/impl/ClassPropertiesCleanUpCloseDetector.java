@@ -81,7 +81,12 @@ public class ClassPropertiesCleanUpCloseDetector extends BaseDetector implements
                     // 是一个赋值语句，存在两种可能：1、在当前方法前面定义了变量；2、在类属性定义了变量
                     // 其中需要优先检查是否在方法体中定义了该变量，因为同名本地变量覆盖
                     PsiExpression lExpression = ae.getLExpression();
-                    String variableName = ReadAction.compute(lExpression::getText);
+                    String variableName;
+                    if (lExpression instanceof PsiReferenceExpression pre) {
+                        variableName = pre.getReferenceName();
+                    } else {
+                        variableName = ReadAction.compute(lExpression::getText);
+                    }
                     if (PsiSearchTool.searchPsiLocalVariableFromMethodBody(variableName, ae) == null) {
                         // 如果 psiLocalVariable 为空，说明不是在此代码块中定义的，是类属性，需要在清理方法中关闭
                         // 忽略语法错误的情况
@@ -120,7 +125,17 @@ public class ClassPropertiesCleanUpCloseDetector extends BaseDetector implements
                 PsiElement variable = methodExpression.getQualifier();
                 String methodName = methodExpression.getReferenceName();
                 if (Objects.nonNull(variable) && (METHOD_CLOSE.equals(methodName) || METHOD_CLOSE_ON_DAEMON.equals(methodName))) {
-                    staticMockCalls.removeIf(ae -> variable.getText().equals(ae.getLExpression().getText()));
+                    String staticMockName = variable instanceof PsiReferenceExpression pre ? pre.getReferenceName() : variable.getText();
+                    if (Objects.isNull(staticMockName)) {
+                        return true;
+                    }
+                    staticMockCalls.removeIf(ae -> {
+                        PsiExpression lExpression = ae.getLExpression();
+                        if (lExpression instanceof PsiReferenceExpression pre) {
+                            return staticMockName.equals(pre.getReferenceName());
+                        }
+                        return staticMockName.equals(lExpression.getText());
+                    });
                 }
                 return true;
             }));

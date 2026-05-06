@@ -16,6 +16,7 @@ import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import com.intellij.ui.content.ContentManager;
 import com.intellij.ui.table.JBTable;
 
 import javax.swing.*;
@@ -43,7 +44,13 @@ public final class DetectResultManager {
             throw new IllegalStateException("tool window is null");
         }
         Content content = newContent(detectResult);
-        ApplicationManager.getApplication().invokeLater(() -> tw.getContentManager().addContent(content));
+        ApplicationManager.getApplication().invokeLater(() -> {
+            ContentManager contentManager = tw.getContentManager();
+            contentManager.addContent(content);
+            if (contentManager.getContentCount() > 1) {
+                contentManager.selectNextContent();
+            }
+        });
         if (!tw.isActive()) {
             ApplicationManager.getApplication().invokeLater(() -> tw.activate(null));
         }
@@ -77,7 +84,9 @@ public final class DetectResultManager {
         });
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(new JBScrollPane(issueTable), BorderLayout.CENTER);
-        return ContentFactory.getInstance().createContent(panel, "扫描结果", false);
+        Content scanResult = ContentFactory.getInstance().createContent(panel, "扫描结果", false);
+        scanResult.setCloseable(true);
+        return scanResult;
     }
 
 

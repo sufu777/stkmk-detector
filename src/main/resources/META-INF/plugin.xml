@@ -26,7 +26,7 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow factoryClass="cc.sufuzz.stkmkdetector.ui.UnClosedStaticMockScanResultWindow"
-                    id="Unclosed StaticMock" anchor="bottom" icon="AllIcons.Actions.Annotate"/>
+                    id="Unclosed StaticMock" anchor="bottom" icon="AllIcons.Actions.Annotate" canCloseContents="true"/>
         <notificationGroup displayType="BALLOON" id="stkmk-detector" bundle="message.i18n"
                            key="notification.group.stkmk-detector"/>
     </extensions>
