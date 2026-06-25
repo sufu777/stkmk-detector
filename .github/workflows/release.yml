@@ -32,7 +32,7 @@ jobs:
 
       # 5. 构建并打包插件（执行 buildPlugin 任务）
       - name: Build plugin
-        run: ./gradlew buildPlugin -PappVersion=${{ github.ref_name }}
+        run: ./gradlew buildPlugin -PreleaseVersion=${{ github.ref_name }}
 
       - name: Display build asset
         run: tree .
