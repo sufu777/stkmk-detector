@@ -32,7 +32,7 @@ jobs:
 
       # 5. 构建并打包插件（执行 buildPlugin 任务）
       - name: Build plugin
-        run: ./gradlew buildPlugin
+        run: ./gradlew buildPlugin -PappVersion=${{ github.ref_name }}
 
       - name: Display build asset
         run: tree .
@@ -44,6 +44,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: build/distributions/*.zip
+          asset_path: build/distributions/stkmk-detector-${{github.ref_name}}.zip
           asset_name: ${{ github.event.repository.name }}-${{ github.ref_name }}.zip
           asset_content_type: application/zip

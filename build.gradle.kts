@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "cc.sufu"
-version = "1.0-SNAPSHOT"
+version = System.getenv("ORG_GRADLE_PROJECT_appVersion") ?: "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
