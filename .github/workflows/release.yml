@@ -34,6 +34,9 @@ jobs:
       - name: Build plugin
         run: ./gradlew buildPlugin
 
+      - name: Display build asset
+        run: tree .
+
       # 6. 上传打包产物（通常位于 build/distributions/ 下）
       - name: Upload release asset
         uses: actions/upload-release-asset@v1
