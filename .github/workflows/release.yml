@@ -1,18 +1,11 @@
-name: release.yml
+name: Build and Release IntelliJ Plugin
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-    types:
-      - closed
+  release:
+    types: [ created ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -42,8 +35,12 @@ jobs:
         run: ./gradlew buildPlugin
 
       # 6. 上传打包产物（通常位于 build/distributions/ 下）
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: plugin-distribution
-          path: build/distributions/*.zip
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./build/distributions/*.zip
+          asset_name: ${{ github.event.repository.name }}-${{ github.ref_name }}.zip
+          asset_content_type: application/zip
