@@ -36,36 +36,43 @@ public class ClassPropertiesCleanUpCloseDetector extends BaseDetector implements
     @Override
     public List<UnClosedStaticMockIssue> doDetect(Project project, ProgressIndicator progressIndicator) {
         progressIndicator.setText2("Apply Scanner " + name());
-        PsiClass beforeAllAnnotation = ReadAction.compute(() -> JavaPsiFacade.getInstance(project).findClass("org.junit.jupiter.api.BeforeAll", GlobalSearchScope.allScope(project)));
-        // 未引入该依赖
-        if (beforeAllAnnotation == null) return Collections.emptyList();
-        PsiClass beforeEachAnnotation = ReadAction.compute(() -> JavaPsiFacade.getInstance(project).findClass("org.junit.jupiter.api.BeforeEach", GlobalSearchScope.allScope(project)));
-        PsiClass afterAllAnnotation = ReadAction.compute(() -> JavaPsiFacade.getInstance(project).findClass("org.junit.jupiter.api.AfterAll", GlobalSearchScope.allScope(project)));
-        PsiClass afterEachAnnotation = ReadAction.compute(() -> JavaPsiFacade.getInstance(project).findClass("org.junit.jupiter.api.AfterEach", GlobalSearchScope.allScope(project)));
-
-
+        // junit5 相关注解
+        EnhanceAnnotation enhanceAnnotation = new EnhanceAnnotation(project);
         Collection<VirtualFile> virtualFiles = super.testFiles(project);
         // 开始遍历
         ArrayList<UnClosedStaticMockIssue> issues = new ArrayList<>();
         for (VirtualFile virtualFile : virtualFiles) {
             if (!virtualFile.isValid()) continue;
             if (progressIndicator.isCanceled()) throw new ProcessCanceledException();
-            issues.addAll(doDetectVirtualFile(project, beforeAllAnnotation, beforeEachAnnotation, afterAllAnnotation, afterEachAnnotation, virtualFile));
+            issues.addAll(doDetectVirtualFile(project, enhanceAnnotation, virtualFile));
         }
         return issues.isEmpty() ? Collections.emptyList() : issues;
     }
 
-    private List<UnClosedStaticMockIssue> doDetectVirtualFile(Project project, PsiClass beforeAllAnnotation, PsiClass beforeEachAnnotation, PsiClass afterAllAnnotation, PsiClass afterEachAnnotation, VirtualFile vf) {
+    private List<UnClosedStaticMockIssue> doDetectVirtualFile(Project project, EnhanceAnnotation enhanceAnnotation, VirtualFile vf) {
         PsiJavaFile pjf = ReadAction.compute(() -> (PsiJavaFile) PsiManager.getInstance(project).findFile(vf));
         if (Objects.isNull(pjf)) return Collections.emptyList();
-        // 搜索 setup 方法和 cleanup 方法
+        // 搜索 setup 方法和 cleanup 方法  此处junit 4/5 一起扫描，不考虑混用的情况
         List<PsiMethod> setupMethods = new ArrayList<>();
-        setupMethods.addAll(ReadAction.compute(() -> AnnotatedElementsSearch.searchPsiMethods(beforeAllAnnotation, GlobalSearchScope.fileScope(pjf)).findAll()));
-        setupMethods.addAll(ReadAction.compute(() -> AnnotatedElementsSearch.searchPsiMethods(beforeEachAnnotation, GlobalSearchScope.fileScope(pjf)).findAll()));
+        Optional.ofNullable(enhanceAnnotation.beforeAllAnnotation)
+                .ifPresent(b -> setupMethods.addAll(ReadAction.compute(() -> AnnotatedElementsSearch.searchPsiMethods(b, GlobalSearchScope.fileScope(pjf)).findAll())));
+        Optional.ofNullable(enhanceAnnotation.beforeEachAnnotation)
+                .ifPresent(b -> setupMethods.addAll(ReadAction.compute(() -> AnnotatedElementsSearch.searchPsiMethods(b, GlobalSearchScope.fileScope(pjf)).findAll())));
+        Optional.ofNullable(enhanceAnnotation.beforeAnnotation)
+                .ifPresent(b -> setupMethods.addAll(ReadAction.compute(() -> AnnotatedElementsSearch.searchPsiMethods(b, GlobalSearchScope.fileScope(pjf)).findAll())));
+        Optional.ofNullable(enhanceAnnotation.beforeClassAnnotation)
+                .ifPresent(b -> setupMethods.addAll(ReadAction.compute(() -> AnnotatedElementsSearch.searchPsiMethods(b, GlobalSearchScope.fileScope(pjf)).findAll())));
         if (setupMethods.isEmpty()) return Collections.emptyList();
         List<PsiMethod> cleanupMethods = new ArrayList<>();
-        cleanupMethods.addAll(ReadAction.compute(() -> AnnotatedElementsSearch.searchPsiMethods(afterAllAnnotation, GlobalSearchScope.fileScope(pjf)).findAll()));
-        cleanupMethods.addAll(ReadAction.compute(() -> AnnotatedElementsSearch.searchPsiMethods(afterEachAnnotation, GlobalSearchScope.fileScope(pjf)).findAll()));
+        Optional.ofNullable(enhanceAnnotation.afterAllAnnotation)
+                .ifPresent(b -> cleanupMethods.addAll(ReadAction.compute(() -> AnnotatedElementsSearch.searchPsiMethods(b, GlobalSearchScope.fileScope(pjf)).findAll())));
+        Optional.ofNullable(enhanceAnnotation.afterEachAnnotation)
+                .ifPresent(b -> cleanupMethods.addAll(ReadAction.compute(() -> AnnotatedElementsSearch.searchPsiMethods(b, GlobalSearchScope.fileScope(pjf)).findAll())));
+        Optional.ofNullable(enhanceAnnotation.afterAnnotation)
+                .ifPresent(b -> cleanupMethods.addAll(ReadAction.compute(() -> AnnotatedElementsSearch.searchPsiMethods(b, GlobalSearchScope.fileScope(pjf)).findAll())));
+        Optional.ofNullable(enhanceAnnotation.afterClassAnnotation)
+                .ifPresent(b -> cleanupMethods.addAll(ReadAction.compute(() -> AnnotatedElementsSearch.searchPsiMethods(b, GlobalSearchScope.fileScope(pjf)).findAll())));
+
         var shouldCloseInCleanup = new ArrayList<PsiAssignmentExpression>();
         List<UnClosedStaticMockIssue> issues = new ArrayList<>();
 

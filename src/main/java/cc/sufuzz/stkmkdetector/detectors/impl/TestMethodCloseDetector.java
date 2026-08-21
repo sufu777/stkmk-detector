@@ -31,23 +31,26 @@ public class TestMethodCloseDetector extends BaseDetector implements UnCloseDete
 
     @Override
     public List<UnClosedStaticMockIssue> doDetect(Project project, ProgressIndicator progressIndicator) {
-        PsiClass testAnnotation = ReadAction.compute(() -> JavaPsiFacade.getInstance(project).findClass("org.junit.jupiter.api.Test", GlobalSearchScope.allScope(project)));
         Collection<VirtualFile> virtualFiles = super.testFiles(project);
         ArrayList<UnClosedStaticMockIssue> issues = new ArrayList<>();
         for (VirtualFile vf : virtualFiles) {
             if (!vf.isValid()) continue;
             if (progressIndicator.isCanceled()) throw new ProcessCanceledException();
-            List<UnClosedStaticMockIssue> unClosedStaticMockIssues = this.doDetectVirtualFile(project, testAnnotation, vf);
+            List<UnClosedStaticMockIssue> unClosedStaticMockIssues = this.doDetectVirtualFile(project, vf);
             issues.addAll(unClosedStaticMockIssues);
         }
         return issues.isEmpty() ? Collections.emptyList() : issues;
     }
 
-    private List<UnClosedStaticMockIssue> doDetectVirtualFile(Project project, PsiClass testAnnotation, VirtualFile vf) {
+    private List<UnClosedStaticMockIssue> doDetectVirtualFile(Project project, VirtualFile vf) {
         PsiJavaFile pjf = ReadAction.compute(() -> (PsiJavaFile) PsiManager.getInstance(project).findFile(vf));
         if (Objects.isNull(pjf)) return Collections.emptyList();
-        Collection<PsiMethod> testMethods = ReadAction.compute(() -> AnnotatedElementsSearch.searchPsiMethods(testAnnotation, GlobalSearchScope.fileScope(pjf)).findAll());
-        return testMethods.stream().flatMap(m -> this.doDetectTestMethod(m, vf).stream()).toList();
+        ArrayList<PsiMethod> psiMethods = new ArrayList<>();
+        PsiClass j5TestAnnotation = ReadAction.compute(() -> JavaPsiFacade.getInstance(project).findClass("org.junit.jupiter.api.Test", GlobalSearchScope.allScope(project)));
+        Optional.ofNullable(j5TestAnnotation).ifPresent(j5t -> psiMethods.addAll(ReadAction.compute(() -> AnnotatedElementsSearch.searchPsiMethods(j5t, GlobalSearchScope.fileScope(pjf)).findAll())));
+        PsiClass j4TestAnnotation = ReadAction.compute(() -> JavaPsiFacade.getInstance(project).findClass("org.junit.Test", GlobalSearchScope.allScope(project)));
+        Optional.ofNullable(j4TestAnnotation).ifPresent(j4t -> psiMethods.addAll(ReadAction.compute(() -> AnnotatedElementsSearch.searchPsiMethods(j4t, GlobalSearchScope.fileScope(pjf)).findAll())));
+        return psiMethods.stream().flatMap(m -> this.doDetectTestMethod(m, vf).stream()).toList();
     }
 
     private List<UnClosedStaticMockIssue> doDetectTestMethod(PsiMethod testMethod, VirtualFile vf) {
